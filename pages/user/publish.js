@@ -191,7 +191,7 @@ const Publish = () => {
                                             <option value={3}>Celulares e Tablets</option>
                                             <option value={3}>Esporte</option>
                                             <option value={3}>Tecnologia</option>
-                                            <option value={3}>Emprego</option>
+                                            <option value={3}>Empregos</option>
                                             <option value={3}>Outros</option>
                                         </Select>
                                     </Box>
