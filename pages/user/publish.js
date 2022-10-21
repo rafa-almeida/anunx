@@ -6,13 +6,12 @@ import {
     Container,
     Typography,
     Box,
-    TextField,
     Select,
     Button,
     IconButton, 
     FormControl,
     InputLabel,
-    OutlinedInput,
+    
     InputAdornment,
     MenuItem,
     FormHelperText,
@@ -21,7 +20,7 @@ import {
 
 import { useDropzone } from 'react-dropzone'
 import { makeStyles } from '@material-ui/core/styles'
-import { DeleteForever, ErrorSharp } from '@material-ui/icons'
+import { DeleteForever } from '@material-ui/icons'
 
 import TemplateDefault from '../../src/templates/Default'
 
@@ -104,32 +103,11 @@ const validationSchema = yup.object().shape({
     email: yup.string().email('Digite um email válido').required('Campo obrigatório'),
     name: yup.string().required('Campo Obrigatório'),
     phone: yup.number().required('Campo Obrigatório'),  
+    files: yup.array().min(1, 'Envie pelo menos uma foto').required('Campo Obrigatório'),
 })
 
 const Publish = () => {
     const classes = useStyles()
-    const [ files, setFiles ] = useState([])
-
-    const { getRootProps, getInputProps } = useDropzone({
-        accept: 'image/*',
-        onDrop: (acceptedFile) => {
-            const newFiles = acceptedFile.map(file => {
-                return Object.assign(file, {
-                    preview: URL.createObjectURL(file)
-                })
-            })
-
-            setFiles([
-                ...files,
-                ...newFiles
-            ])
-        }
-    })
-
-    const handleRemoveFile = fileName => {
-        const newFileState = files.filter(file => file.name !== fileName)
-        setFiles(newFileState)
-    }
 
     return (
         <TemplateDefault>
@@ -142,6 +120,7 @@ const Publish = () => {
                     email: '',
                     name: '',
                     phone: '',
+                    files: [],
                 }}
                 validationSchema={validationSchema}
                 onSubmit={(values) => {
@@ -150,12 +129,36 @@ const Publish = () => {
             >
                 {
                     ({
+                        touched,
                         values,
                         errors,
                         handleChange,
                         handleSubmit,
+                        setFieldValue,
                     }) => {
+
                         
+                        const { getRootProps, getInputProps } = useDropzone ({
+                            accept: 'image/*',
+                            onDrop: (acceptedFile) => {
+                                const newFiles = acceptedFile.map(file => {
+                                    return Object.assign(file, {
+                                        preview: URL.createObjectURL(file)
+                                    })
+                                })
+
+                                setFieldValue('files', [
+                                    ...values.files,
+                                    ...newFiles
+                                ])
+                            }   
+                        })
+    
+                        const handleRemoveFile = fileName => {
+                            const newFileState = values.files.filter(file => file.name !== fileName)
+                            setFieldValue('files', newFileState)
+                        }
+
                         return (
                             <form onSubmit={handleSubmit}>
                                 <Container maxWidth="sm">
@@ -174,7 +177,7 @@ const Publish = () => {
                                 <Container maxWidth="md" className={classes.boxContainer}>
                                     <Box className={classes.box}>
 
-                                        <FormControl error= {errors.title} fullWidth>
+                                        <FormControl error= {errors.title && touched.title} fullWidth>
                                             <InputLabel className={classes.inputLabel}>Título do anúncio</InputLabel>
                                             <Input
                                                 name="title"
@@ -183,7 +186,7 @@ const Publish = () => {
                                                 label="ex.: Bicicleta aro 18 com garantia"
                                             />
                                             <FormHelperText>
-                                                { errors.title }
+                                                { errors.title && touched.title ? errors.title : null }
                                             </FormHelperText>
                                         </FormControl>
                                         <br /><br />
@@ -213,7 +216,7 @@ const Publish = () => {
                                                 <MenuItem value="Outros">Outros</MenuItem>
                                             </Select>
                                             <FormHelperText>
-                                                { errors.category }
+                                                { errors.title && touched.category ? errors.category : null }
                                             </FormHelperText>
                                         </FormControl>
                                     </Box>
@@ -223,26 +226,31 @@ const Publish = () => {
                                     <Box className={classes.box}> 
                                         <Typography         
                                             component="h6"  
-                                            variant="h6"  color="primary">
+                                            variant="h6"  color={errors.files ? 'error' :"textPrimary"}>
                                             Imagens
                                         </Typography>
                                         <Typography         
                                             component="div"  
-                                            variant="body2"  color="primary">
+                                            variant="body2"  color={errors.files ? 'error' :"textPrimary"}>
                                             A primeira imagem é a foto principal do seu anúncio.
                                         </Typography>
+                                        {
+                                            errors.files && touched.files
+                                                ? <Typography variant="body2" color="error" gutterBottom>{errors.files}</Typography>
+                                                : null
+                                        }
                                         <Box className={classes.
                                             thumbsContainer}>
                                             <Box className=
                                                 {classes.dropzone} {...getRootProps()}>
-                                                <input {...getInputProps()} />                            
-                                                <Typography variant="body2" color="primary">
+                                                <input name="files" {...getInputProps()} />                            
+                                                <Typography variant="body2" color={errors.files ? 'error' :"textPrimary"}>
                                                     Clique para adicionar ou arraste a imagem até aqui.
                                                 </Typography>
                                             </Box>
 
                                             {
-                                                files.map((file,index) => (
+                                                values.files.map((file,index) => (
                                                     <Box 
                                                         key={file.name}
                                                         className={classes.thumb} style={{ backgroundImage: `url(${file.preview})`}}
@@ -282,7 +290,7 @@ const Publish = () => {
                                                 onChange={handleChange}
                                             />
                                             <FormHelperText>
-                                                {errors.description}
+                                                {errors.description && touched.description ? errors.description : null}
                                             </FormHelperText>
                                         </FormControl>
                                     </Box>
@@ -299,7 +307,7 @@ const Publish = () => {
                                                 startAdornment={<InputAdornment position="start">R$</InputAdornment>}
                                             />
                                             <FormHelperText>
-                                                {errors.price}
+                                                {errors.price && touched.price ? errors.price : null}
                                             </FormHelperText>
                                         </FormControl>                                                 
                                     </Box>
@@ -321,7 +329,7 @@ const Publish = () => {
                                                 onChange={handleChange}                                                
                                             />
                                             <FormHelperText>
-                                                { errors.name }
+                                                { errors.name && touched.name ? errors.name : null }
                                             </FormHelperText>
                                         </FormControl>
                                         <br /><br />
